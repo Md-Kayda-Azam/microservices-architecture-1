@@ -1,44 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Student } from './model/student.model';
+import { Student, StudentDocument } from './model/student.model';
 import { CreateStudentDto } from './dto/create-student.input';
 import { UpdateStudentDto } from './dto/update-student.input';
 import { KafkaProducer } from './kafka/kafka.producer';
 
-
 @Injectable()
 export class StudentService {
-  constructor(@InjectModel(Student.name) private readonly studentModel: Model<Student>,
-    private readonly kafkaProducer: KafkaProducer) { }
+  private readonly logger = new Logger(StudentService.name);
+
+  constructor(
+    @InjectModel(Student.name) private readonly studentModel: Model<StudentDocument>,
+    private readonly kafkaProducer: KafkaProducer
+  ) { }
 
   async create(createStudentInput: CreateStudentDto): Promise<Partial<Student>> {
-    const { schoolId, ...otherData } = createStudentInput;
+    try {
+      const { schoolId, ...otherData } = createStudentInput;
 
-    // Kafka service call for fetching school data
-    const schoolData: any = await this.kafkaProducer.requestSchoolData(schoolId);
-    console.log(schoolData, "student service a school data");
-    if (!schoolData) {
-      throw new NotFoundException(`School with ID ${schoolId} not found`);
+      // Create and save the student
+      const student = new this.studentModel({ ...otherData, schoolId });
+      const savedStudent = await student.save();
+
+      // Send event to Kafka topic via KafkaProducer
+      await this.kafkaProducer.sendStudentCreatedEvent({
+        studentId: savedStudent._id,
+        schoolId: savedStudent.schoolId,
+        name: savedStudent.name,
+        address: savedStudent.name,
+        phoneNumber: savedStudent.phoneNumber,
+        email: savedStudent.email,
+      });
+
+      return savedStudent.toObject();
+    } catch (error) {
+      throw new InternalServerErrorException(`Student creation failed: ${error.message}`);
     }
-
-    const school = {
-      _id: schoolData._id,
-      name: schoolData.name,
-      address: schoolData.address,
-      phoneNumber: schoolData.phoneNumber,
-      email: schoolData.email
-    };
-
-    // Create and save the student
-    const student = new this.studentModel({ ...otherData, schoolId });
-    const savedStudent = await student.save();
-
-    // Return the saved student along with full school info
-    return {
-      ...savedStudent.toObject(),
-      school
-    } as Partial<Student>; // ✅ Fixing the TypeScript error
   }
 
   async findAll(): Promise<Student[]> {
@@ -58,6 +56,12 @@ export class StudentService {
     if (!updatedStudent) {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
+
+    // Send event to Kafka topic via KafkaProducer
+    await this.kafkaProducer.sendStudentUpdatedEvent(updatedStudent._id, updateStudentInput);
+
+    this.logger.log(`🔄 Student Updated: ${updatedStudent._id}`);
+
     return updatedStudent;
   }
 
@@ -66,6 +70,12 @@ export class StudentService {
     if (!deletedStudent) {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
+
+    // Send event to Kafka topic via KafkaProducer
+    await this.kafkaProducer.sendStudentDeletedEvent(deletedStudent._id);
+
+    this.logger.log(`🗑️ Student Deleted: ${deletedStudent._id}`);
+
     return deletedStudent;
   }
 }

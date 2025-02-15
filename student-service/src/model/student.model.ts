@@ -1,7 +1,6 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { School } from './school.model'; // School মডেল ইমপোর্ট করুন
 
 @ObjectType()
 @Schema()
@@ -28,10 +27,6 @@ export class Student extends Document {
     @Field()
     @Prop({ required: true })
     schoolId: string;
-
-    // 👇 নতুনভাবে School সম্পর্কিত তথ্য যুক্ত করুন
-    @Field(() => School, { nullable: true }) // GraphQL-এ একে nullable রাখুন
-    school?: School;
 }
-
+export type StudentDocument = Student & Document;
 export const StudentSchema = SchemaFactory.createForClass(Student);

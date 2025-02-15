@@ -47,3 +47,15 @@ services:
       PORT: 3002
       KAFKAJS_NO_PARTITIONER_WARNING: "1"
     restart: always
+  parent-service:
+    build: ./parent-service
+    container_name: parent-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 3003
+      KAFKAJS_NO_PARTITIONER_WARNING: "1"
+    restart: always

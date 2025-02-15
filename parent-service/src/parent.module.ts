@@ -1,24 +1,25 @@
 import { Module } from '@nestjs/common';
-import { SchoolService } from './school.service';
-import { SchoolResolver } from './school.resolver';
+import { ParentService } from './parent.service';
+import { ParentResolver } from './parent.resolver';
+import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { MongooseModule } from '@nestjs/mongoose';
-import { School, SchoolSchema } from './model/school.model';
+import { Parent, ParentSchema } from './model/parent.model';
 import { KafkaModule } from './kafka.module';
 
 @Module({
   imports: [
     KafkaModule,
+    MongooseModule.forFeature([{ name: Parent.name, schema: ParentSchema }]),
     MongooseModule.forRoot("mongodb+srv://azam:azam@cluster0.vgsmn.mongodb.net/test-project"),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
       debug: true,
-      playground: true,
+      playground: true
     }),
-    MongooseModule.forFeature([{ name: School.name, schema: SchoolSchema }]),
+
   ],
-  providers: [SchoolResolver, SchoolService],
+  providers: [ParentResolver, ParentService],
 })
-export class SchoolModule { }
+export class ParentModule { }

@@ -14,31 +14,27 @@ export class KafkaProducer {
     private async connectProducer() {
         try {
             await this.producer.connect();
-            this.logger.log('🚀 Kafka Student Producer Connected');
+            this.logger.log('🚀 Kafka School Producer Connected');
         } catch (error) {
             this.logger.error(`❌ Kafka Connection Failed: ${error.message}`);
         }
     }
 
-    // ✅ Student তৈরি হলে ইভেন্ট পাঠাবে
-    public async sendStudentCreatedEvent(student: any) {
-        await this.sendMessage('student.create', student);
-        this.logger.log(`📢 Student Created Event Sent: ${student.studentId}`);
+    public async sendSchoolCreatedEvent(school: any) {
+        await this.sendMessage('school.create', school);
+        this.logger.log(`📢 School Created Event Sent: ${school.schoolId}`);
     }
 
-    // ✅ Student আপডেট হলে ইভেন্ট পাঠাবে
-    public async sendStudentUpdatedEvent(studentId: string, updatedFields: any) {
-        await this.sendMessage('student.update', { studentId, updatedFields });
-        this.logger.log(`📢 Student Updated Event Sent: ${studentId}`);
+    public async sendSchoolUpdatedEvent(schoolId: string, updatedFields: any) {
+        await this.sendMessage('school.update', { schoolId, updatedFields });
+        this.logger.log(`📢 School Updated Event Sent: ${schoolId}`);
     }
 
-    // ✅ Student মুছে ফেলা হলে ইভেন্ট পাঠাবে
-    public async sendStudentDeletedEvent(studentId: string) {
-        await this.sendMessage('student.delete', { studentId });
-        this.logger.log(`🗑️ Student Deleted Event Sent: ${studentId}`);
+    public async sendSchoolDeletedEvent(schoolId: string) {
+        await this.sendMessage('school.delete', { schoolId });
+        this.logger.log(`🗑️ School Deleted Event Sent: ${schoolId}`);
     }
 
-    // ✅ Reusable Kafka Message Sender
     public async sendMessage(topic: string, message: any) {
         try {
             await this.producer.send({

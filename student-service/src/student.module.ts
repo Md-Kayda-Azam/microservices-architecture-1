@@ -5,10 +5,12 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Student, StudentSchema } from './model/student.model';
-import { KafkaProducer } from './kafka/kafka.producer';
+import { KafkaModule } from './kafka.module';
 
 @Module({
   imports: [
+    KafkaModule,
+    MongooseModule.forFeature([{ name: Student.name, schema: StudentSchema }]),
     MongooseModule.forRoot("mongodb+srv://azam:azam@cluster0.vgsmn.mongodb.net/test-project"),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -16,8 +18,8 @@ import { KafkaProducer } from './kafka/kafka.producer';
       debug: true,
       playground: true,
     }),
-    MongooseModule.forFeature([{ name: Student.name, schema: StudentSchema }]),
   ],
-  providers: [KafkaProducer, StudentResolver, StudentService],
+  providers: [StudentResolver, StudentService],
+  exports: [MongooseModule],
 })
 export class StudentModule { }
