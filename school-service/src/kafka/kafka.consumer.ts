@@ -90,22 +90,40 @@ export class KafkaConsumer {
     private async handleDelete(messageData: any) {
         try {
             const { schoolId } = messageData;
-            const deletedSchool = await this.schoolModel.findByIdAndDelete(schoolId);
 
-            if (!deletedSchool) {
-                throw new NotFoundException(`School with ID ${schoolId} not found`);
+            this.logger.log(`🔍 Checking if school exists before deleting: ${schoolId}`);
+
+            // স্কুল আগেই ডিলিট হয়েছে কিনা চেক করা
+            const existingSchool = await this.schoolModel.findById(schoolId);
+
+            if (!existingSchool) {
+                this.logger.warn(`⚠️ School with ID ${schoolId} already deleted or not found.`);
+
+                // 🔥 আগেই ডিলিট হয়ে থাকলেও Kafka তে Success Message পাঠাবো
+                await this.producer.send({
+                    topic: 'school.delete.response',
+                    messages: [{ value: JSON.stringify({ schoolId, deleted: true }) }],
+                });
+
+                return; // School নেই, তাই আর ডিলিট করার দরকার নেই
             }
 
-            this.logger.log(`🗑️ School Deleted: ${deletedSchool._id}`);
+            // ✅ যদি স্কুল থাকে, তাহলে ডিলিট করবো
+            await this.schoolModel.findByIdAndDelete(schoolId);
+            this.logger.log(`🗑️ School Deleted: ${schoolId}`);
 
+            // ✅ Kafka-তে Delete Success Message পাঠানো
             await this.producer.send({
                 topic: 'school.delete.response',
                 messages: [{ value: JSON.stringify({ schoolId, deleted: true }) }],
             });
+
         } catch (error) {
             this.logger.error(`🚨 Error deleting school: ${error.message}`, error.stack);
         }
     }
+
+
 
     private async handleGetById(messageData: any) {
         const { schoolId } = messageData;

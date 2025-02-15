@@ -29,11 +29,11 @@ export class StudentResolver {
   }
 
   @Mutation(() => Student)
-  updateStudent(@Args('updateStudentInput') updateStudentInput: UpdateStudentDto) {
-    if (!Types.ObjectId.isValid(updateStudentInput.id)) {
+  updateStudent(@Args('id') id: string, @Args('updateStudentInput') updateStudentInput: UpdateStudentDto) {
+    if (!Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ObjectId');
     }
-    return this.StudentService.update(updateStudentInput.id, updateStudentInput);
+    return this.StudentService.update(id, updateStudentInput);
   }
 
   @Mutation(() => Student)

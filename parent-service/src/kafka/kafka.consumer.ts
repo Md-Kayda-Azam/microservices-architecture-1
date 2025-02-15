@@ -96,14 +96,28 @@ export class KafkaConsumer implements OnModuleInit {
     private async handleDelete(messageData: any) {
         try {
             const { parentId } = messageData;
-            const deletedParent = await this.parentModel.findByIdAndDelete(parentId);
 
-            if (!deletedParent) {
-                throw new NotFoundException(`Parent with ID ${parentId} not found`);
+            this.logger.log(`🔍 Checking if parent exists before deleting: ${parentId}`);
+
+            // Check if parent exists before deleting
+            const existingParent = await this.parentModel.findById(parentId);
+            if (!existingParent) {
+                this.logger.warn(`⚠️ Parent with ID ${parentId} already deleted or not found.`);
+
+                // 🔥 Send success message even if already deleted
+                await this.producer.send({
+                    topic: 'parent.delete.response',
+                    messages: [{ value: JSON.stringify({ parentId, deleted: true }) }],
+                });
+
+                return; // No need to delete again
             }
 
-            this.logger.log(`🗑️ Parent Deleted: ${deletedParent._id}`);
+            // ✅ Delete parent if found
+            await this.parentModel.findByIdAndDelete(parentId);
+            this.logger.log(`🗑️ Parent Deleted: ${parentId}`);
 
+            // ✅ Send Kafka success message
             await this.producer.send({
                 topic: 'parent.delete.response',
                 messages: [{ value: JSON.stringify({ parentId, deleted: true }) }],
@@ -113,6 +127,7 @@ export class KafkaConsumer implements OnModuleInit {
             this.logger.error(`🚨 Error deleting parent: ${error.message}`, error.stack);
         }
     }
+
 
     // ✅ Handle Get Parent by ID
     private async handleGetById(messageData: any) {

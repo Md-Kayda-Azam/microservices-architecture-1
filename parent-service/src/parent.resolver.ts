@@ -28,11 +28,11 @@ export class ParentResolver {
   }
 
   @Mutation(() => Parent)
-  updateParent(@Args('updateParentInput') updateParentInput: UpdateParentInput) {
-    if (!Types.ObjectId.isValid(updateParentInput.id)) {
+  updateParent(@Args('id') id: string, @Args('updateParentInput') updateParentInput: UpdateParentInput) {
+    if (!Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ObjectId');
     }
-    return this.parentService.update(updateParentInput.id, updateParentInput);
+    return this.parentService.update(id, updateParentInput);
   }
 
   @Mutation(() => Parent)

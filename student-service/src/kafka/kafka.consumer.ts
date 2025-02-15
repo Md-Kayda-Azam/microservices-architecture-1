@@ -92,22 +92,38 @@ export class KafkaConsumer implements OnModuleInit {
     private async handleDelete(messageData: any) {
         try {
             const { studentId } = messageData;
-            const deletedStudent = await this.studentModel.findByIdAndDelete(studentId);
 
-            if (!deletedStudent) {
-                throw new NotFoundException(`Student with ID ${studentId} not found`);
+            this.logger.log(`🔍 Checking if student exists before deleting: ${studentId}`);
+
+            // Check if student exists before deleting
+            const existingStudent = await this.studentModel.findById(studentId);
+            if (!existingStudent) {
+                this.logger.warn(`⚠️ Student with ID ${studentId} already deleted or not found.`);
+
+                // 🔥 Even if already deleted, send success message to Kafka
+                await this.producer.send({
+                    topic: 'student.delete.response',
+                    messages: [{ value: JSON.stringify({ studentId, deleted: true }) }],
+                });
+
+                return; // No need to delete again
             }
 
-            this.logger.log(`🗑️ Student Deleted: ${deletedStudent._id}`);
+            // ✅ Delete student if found
+            await this.studentModel.findByIdAndDelete(studentId);
+            this.logger.log(`🗑️ Student Deleted: ${studentId}`);
 
+            // ✅ Send Kafka success message
             await this.producer.send({
                 topic: 'student.delete.response',
                 messages: [{ value: JSON.stringify({ studentId, deleted: true }) }],
             });
+
         } catch (error) {
             this.logger.error(`🚨 Error deleting student: ${error.message}`, error.stack);
         }
     }
+
 
     // ✅ Handle Get Student by ID
     private async handleGetById(messageData: any) {
