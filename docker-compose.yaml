@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   zookeeper:
     image: wurstmeister/zookeeper
@@ -17,45 +17,80 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "school.getById:1:1,school.getById.response:1:1" # টপিক অটো-ক্রিয়েশন
+      # KAFKA_CREATE_TOPICS: "school.getById:1:1,school.getById.response:1:1" # টপিক অটো-ক্রিয়েশন
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # টপিক অটো-ক্রিয়েশন সক্ষম করুন
     depends_on:
       - zookeeper
 
-  school-service:
-    build: ./school-service
-    container_name: school-service
+  # school-service:
+  #   build: ./school-service
+  #   container_name: school-service
+  #   ports:
+  #     - "3001:3001"
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
+  #     PORT: 3001
+  #     KAFKAJS_NO_PARTITIONER_WARNING: "1"
+  #   restart: always
+  permission-service:
+    build: ./permission-service
+    container_name: permission-service
     ports:
-      - "3001:3001"
+      - "3005:3005"
     depends_on:
       - kafka
     environment:
       KAFKA_BROKER: kafka:9092
-      PORT: 3001
+      PORT: 3005
       KAFKAJS_NO_PARTITIONER_WARNING: "1"
     restart: always
-
-  student-service:
-    build: ./student-service
-    container_name: student-service
+  role-service:
+    build: ./role-service
+    container_name: role-service
     ports:
-      - "3002:3002"
+      - "3006:3006"
     depends_on:
       - kafka
     environment:
       KAFKA_BROKER: kafka:9092
-      PORT: 3002
+      PORT: 3006
       KAFKAJS_NO_PARTITIONER_WARNING: "1"
     restart: always
-  parent-service:
-    build: ./parent-service
-    container_name: parent-service
-    ports:
-      - "3003:3003"
-    depends_on:
-      - kafka
-    environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 3003
-      KAFKAJS_NO_PARTITIONER_WARNING: "1"
-    restart: always
+  # student-service:
+  #   build: ./student-service
+  #   container_name: student-service
+  #   ports:
+  #     - "3002:3002"
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
+  #     PORT: 3002
+  #     KAFKAJS_NO_PARTITIONER_WARNING: "1"
+  #   restart: always
+  # parent-service:
+  #   build: ./parent-service
+  #   container_name: parent-service
+  #   ports:
+  #     - "3003:3003"
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
+  #     PORT: 3003
+  #     KAFKAJS_NO_PARTITIONER_WARNING: "1"
+  #   restart: always
+  # user-service:
+  #   build: ./user-service
+  #   container_name: user-service
+  #   ports:
+  #     - "3004:3004"
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
+  #     PORT: 3004
+  #     KAFKAJS_NO_PARTITIONER_WARNING: "1"
+  #   restart: always
