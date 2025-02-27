@@ -8,7 +8,7 @@ export class Device {
   _id: string;
 
   @Field()
-  @Prop({ required: true })
+  @Prop({ required: false }) // client-site device ID get from FingerprintJS
   deviceId: string;
 
   @Field()

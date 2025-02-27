@@ -27,6 +27,10 @@ export class User {
   @Prop({ required: true })
   role: string;
 
+  @Field(() => ID, { nullable: true })
+  @Prop({ required: true })
+  school: string;
+
   @Field({ defaultValue: true })
   @Prop({ default: true })
   isActive: boolean;
@@ -43,9 +47,20 @@ export class User {
   @Prop()
   mfaSecret?: string;
 
-  @Field(() => [String], { nullable: true })
-  @Prop({ type: [String], default: [] })
-  devices?: string[];
+  @Field(() => [Device], { nullable: true })
+  @Prop({
+    type: [
+      {
+        _id: String,
+        deviceId: String,
+        ipAddress: String,
+        userAgent: String,
+        location: String,
+      },
+    ],
+    default: [],
+  })
+  devices?: Device[];
 
   @Field(() => [String], { nullable: true })
   @Prop({ type: [String], default: [] })
@@ -72,50 +87,54 @@ export class User {
 
   @Field({ nullable: true })
   @Prop()
+  verificationOTP?: string;
+
+  @Field({ nullable: true })
+  @Prop()
+  verificationOtpExpires?: Date;
+
+  @Field({ nullable: true })
+  @Prop()
   verificationToken?: string;
+
+  @Field({ defaultValue: false })
+  @Prop({ default: false })
+  isDeleted: boolean;
+
+  @Field({ nullable: true })
+  @Prop()
+  otpRequestedAt?: Date;
+
+  @Field({ defaultValue: 0 })
+  @Prop({ default: 0 })
+  otpRequestCount?: number;
+
+  @Field({ nullable: true })
+  @Prop()
+  otpBlockedUntil?: Date;
+
+  @Field({ nullable: true })
+  @Prop({ type: String, default: null })
+  refreshToken?: string;
 }
 
 export type UserDocument = User & Document;
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-// import { Document } from 'mongoose';
-// import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+@ObjectType()
+export class Device {
+  @Field()
+  _id: string;
 
-// export enum UserRole {
-//   ADMIN = 'ADMIN',
-//   SCHOOL_ADMIN = 'SCHOOL_ADMIN',
-//   STUDENT = 'STUDENT',
-//   PARENT = 'PARENT',
-// }
+  @Field()
+  deviceId: string;
 
-// registerEnumType(UserRole, { name: 'UserRole' });
+  @Field()
+  ipAddress: string;
 
-// @ObjectType()
-// @Schema({ timestamps: true })
-// export class User extends Document {
-//   @Field(() => ID)
-//   _id: string;
+  @Field()
+  userAgent: string;
 
-//   @Field()
-//   @Prop({ required: true })
-//   name: string;
-
-//   @Field()
-//   @Prop({ required: true, unique: true })
-//   email: string;
-
-//   @Prop({ required: true })
-//   password: string;
-
-//   @Field(() => UserRole)
-//   @Prop({ required: true, enum: UserRole })
-//   role: UserRole;
-
-//   @Field({ nullable: true })
-//   @Prop()
-//   schoolId?: string;
-// }
-
-// export type UserDocument = User & Document;
-// export const UserSchema = SchemaFactory.createForClass(User);
+  @Field({ nullable: true })
+  location?: string;
+}

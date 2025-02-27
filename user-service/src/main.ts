@@ -1,10 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { UserModule } from './user.module';
+import { ValidationPipe } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(UserModule);
 
+  app.useGlobalPipes(new ValidationPipe());
   // Kafka Microservice Configuration for User Service
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.KAFKA,

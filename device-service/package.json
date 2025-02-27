@@ -30,6 +30,7 @@
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "apollo-server-express": "^3.13.0",
+    "class-validator": "^0.14.1",
     "graphql": "^16.10.0",
     "graphql-tools": "^9.0.14",
     "kafkajs": "^2.2.4",
